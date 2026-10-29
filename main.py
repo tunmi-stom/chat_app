@@ -1,4 +1,5 @@
 from fastapi import WebSocket, FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from core.config import settings
 from routers import auth_routes, room_routes, user_routes
 from core.db_config import Base, engine
@@ -15,14 +16,15 @@ app.include_router(auth_routes.router)
 app.include_router(room_routes.router)
 app.include_router(user_routes.router)
 
+# Include Middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173", "http://localhost:5174"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 @app.get("/")
 def ping():
     return {"message": "pong!"}
-
-@app.websocket("/ws")
-async def websockets_tut(websocket: WebSocket):
-    await websocket.accept()
-    await websocket.send_text("This is your Echo server!")
-    while True:
-        data = await websocket.receive_text()
-        await websocket.send_text(f"You said: {data}")

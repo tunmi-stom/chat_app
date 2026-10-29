@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from models.room import Room
 from models.user import User
 from utils.helpers import hash_password, verify_password, generate_room_id
-from schemas.rooms import RoomCreateData, RoomLogin
+from schemas.rooms import RoomCreateData, RoomLogin, RoomResponse
 from schemas.users import UserResponse
 from .ws_manager import rooms_manager, ConnectionManager
 from utils.enums import Roles
@@ -98,7 +98,7 @@ class RoomService:
         manager: ConnectionManager = room_data["manager"]
         
         already_connected = any(
-            participant.get("user").id == user.id
+            participant["user_email"] == user.email
             for participant in manager.active_participants
         )
         
@@ -114,9 +114,15 @@ class RoomService:
             "room_name": room.name,
             "role": role
         }
-        
+    
     @staticmethod
-    async def chat_room(db: Session, email: str, websocket: WebSocket, data: RoomLogin):
+    async def chat_room(
+        db: Session, 
+        email: str, 
+        websocket: WebSocket, 
+        room_id: str,
+        pass_key: str
+    ):
         # Check if user exists
         user = db.query(User).filter(User.email == email).first()
         if user is None:
@@ -126,34 +132,43 @@ class RoomService:
             )
         
         # Check if the room exists
-        room = db.query(Room).filter(Room.name == data.name).first()
+        room = db.query(Room).filter(Room.room_id == room_id).first()
         if room is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Room doesn't exists."
             )
             
-        # Get room
+        # Get room data.
         room_data = rooms_manager.get_room(room.room_id)
-        
+        if room_data is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Room data not found."
+            )
+            
         # Get the room manager
         manager: ConnectionManager = room_data.get("manager")
         
         # Get the data on the room (room_name, room_id and role). Also 
         # some necessary validations
-        data = RoomService.enter_room(db, email, data)
+        room_access_data = RoomService.enter_room(db, email, RoomLogin(name=room.name, key=pass_key))
         
         # Accepting the connection
-        await manager.connect(websocket, user, data["role"])
+        await manager.connect(websocket, user, room_access_data["role"])
+        
+        # Broadcast joining the room to all other participants
+        await manager.broadcast_message(f"User {user.email} has joined the chat", user)
         
         try:
             while True:
-                message = await websocket.receive_text()
+                data = await websocket.receive_text()
+                await manager.broadcast_message(data, user)
         except WebSocketDisconnect:
             manager.disconnect(websocket)
             await manager.broadcast_message(f"User {user.email} has left the chat", user)
-        return message
-        
-        
-        
-        
+    
+    @staticmethod
+    def get_room_list(db: Session):
+        rooms = db.query(Room).all()
+        return [RoomResponse.model_validate(room) for room in rooms]
