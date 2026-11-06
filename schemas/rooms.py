@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 
 class RoomSchema(BaseModel):
     id: int
@@ -18,11 +18,3 @@ class RoomCreateData(BaseModel):
 class RoomLogin(BaseModel):
     name: str
     key: str
-    
-class RoomResponse(BaseModel):
-    name: str | None = None
-    desc: str | None = None
-    max_participants: int | None = None
-    room_id: str | None = None
-    
-    model_config = ConfigDict(from_attributes=True)
