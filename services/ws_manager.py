@@ -33,10 +33,10 @@ class ConnectionManager:
     async def broadcast_message(
         self, 
         message: str, 
-        user: User
+        sender: WebSocket, # fix: Discrepancy created when same user uses diferent websockets
     ):
         for participant in self.active_participants:
-            if participant["user_email"] == user.email:
+            if participant["websocket"] == sender:
                 continue
             await participant["websocket"].send_text(message)
                 
