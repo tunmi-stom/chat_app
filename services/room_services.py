@@ -157,18 +157,21 @@ class RoomService:
         # Accepting the connection
         await manager.connect(websocket, user, room_access_data["role"])
         
-        # Broadcast joining the room to all other participants
-        await manager.broadcast_message(f"User {user.email} has joined the chat", user)
+        # Broadcast joining the room to all participants
+        await manager.broadcast_message(f"User {user.email} has joined the chat", websocket)
         
         try:
             while True:
                 data = await websocket.receive_text()
-                await manager.broadcast_message(data, user)
+                await manager.broadcast_message(data, websocket)
         except WebSocketDisconnect:
             manager.disconnect(websocket)
-            await manager.broadcast_message(f"User {user.email} has left the chat", user)
+            await manager.broadcast_message(f"User {user.email} has left the chat", websocket)
     
     @staticmethod
-    def get_room_list(db: Session):
-        rooms = db.query(Room).all()
+    def get_room_list(db: Session, page: int, limit: int):
+        # Calculate the offset
+        offset = (limit - 1) * page
+        
+        rooms = db.query(Room).offset(offset).limit(limit).all()
         return [RoomResponse.model_validate(room) for room in rooms]

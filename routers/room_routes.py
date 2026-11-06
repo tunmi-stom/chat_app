@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, WebSocket
+from fastapi import APIRouter, Depends, WebSocket, Query
 from core.dependency import get_current_user, get_websocket_user
 from core.db_config import db_dependency
 from services.room_services import RoomService
@@ -28,8 +28,8 @@ def register_for_room(
     return {"detail": "Room Entered.", "data": data}
 
 @router.get("/")
-def get_rooms(db: db_dependency):
-    data = RoomService.get_room_list(db)
+def get_rooms(db: db_dependency, page: int = Query(1, ge=1), limit: int = Query(20)):
+    data = RoomService.get_room_list(db, page, limit)
     return {"detail": data}
 
 @router.websocket("/{room_id}")
@@ -39,5 +39,5 @@ async def chat_room(
     room_id: str,
     key: str
 ):
-    email: str = get_websocket_user(websocket)
+    email: str = get_websocket_user(websocket, db=db)
     await RoomService.chat_room(db, email, websocket, room_id, key)

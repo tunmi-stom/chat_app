@@ -1,3 +1,4 @@
+from uuid import uuid4
 from jose import jwt, ExpiredSignatureError, JWTError
 from fastapi import HTTPException, status
 from datetime import datetime, timedelta
@@ -10,6 +11,7 @@ def create_access_token(data: TokenData) -> str:
     
     payload = {
         "sub": data.username,
+        "jti": str(uuid4()),
         "iat": datetime.utcnow(),
         "exp": expire_delta,
         "email": data.email
