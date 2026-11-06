@@ -6,7 +6,7 @@ from schemas.users import UserCreateData, UserLoginData
 from schemas.tokens import TokenData
 from models.token import RevokedToken
 from utils.helpers import hash_password, verify_password
-from utils.enums import Roles
+# from utils.enums import Roles
 from auth.auth_handler import create_access_token, decode_token
 
 class AuthService:

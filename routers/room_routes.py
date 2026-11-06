@@ -5,8 +5,8 @@ from services.room_services import RoomService
 from schemas.rooms import RoomCreateData, RoomLogin
 
 router = APIRouter(
-    prefix="/room",
-    tags=["room"]
+    prefix="/rooms",
+    tags=["rooms"]
 )
 
 @router.post("/create")
@@ -18,7 +18,7 @@ def create_room(
     room = RoomService.create_room(db, email, data)
     return {"detail": "Room Created", "data": room}
 
-@router.post("/enter-room/{room_id}")
+@router.post("/enter-room")
 def register_for_room(
     db: db_dependency, 
     roomlogin: RoomLogin, 
@@ -36,9 +36,9 @@ def get_rooms(db: db_dependency, page: int = Query(1, ge=1), limit: int = Query(
 async def chat_room(
     db: db_dependency, 
     websocket: WebSocket, 
-    room_id: int, 
+    room_id: str, 
     key: str,
-    email: str = Depends(get_current_user)
+    email: str = Depends(get_websocket_user)
 ):
     email: str = get_websocket_user(websocket, db)
     await RoomService.chat_room(db, email, websocket, room_id, key)
