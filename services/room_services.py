@@ -165,7 +165,6 @@ class RoomService:
         email: str, 
         websocket: WebSocket, 
         room_id: str,
-        pass_key: str
     ):
         # Check if user exists
         user = db.query(User).filter(User.email == email).first()

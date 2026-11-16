@@ -49,9 +49,12 @@ def get_websocket_user(
     db: Session = Depends(get_db)
 ) -> str:
     token = websocket.cookies.get("access_token")
-
+    
+    # if not token:
+    #     token = websocket.query_params.get("token")
+        
     if not token:
-        token = websocket.query_params.get("token")
+        token = websocket.headers.get("Authorization")
         
     if not token:
         raise WebSocketException(

@@ -37,8 +37,16 @@ async def chat_room(
     db: db_dependency, 
     websocket: WebSocket, 
     room_id: str, 
-    key: str,
     email: str = Depends(get_websocket_user)
 ):
-    email: str = get_websocket_user(websocket, db)
-    await RoomService.chat_room(db, email, websocket, room_id, key)
+    # email: str = get_websocket_user(websocket, db)
+    await RoomService.chat_room(db, email, websocket, room_id)
+    
+@router.delete("/delete-room/{room_id}")
+def delete_room(
+    db: db_dependency, 
+    room_id: str,
+    email: str = Depends(get_current_user)
+):
+    data = RoomService.delete_room(db, room_id, email)
+    return {"detail": "Room deleted", "data": data}

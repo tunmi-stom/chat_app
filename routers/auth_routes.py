@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Response, Depends
+from fastapi import APIRouter, Response, Depends, Request, HTTPException, status
 from core.db_config import db_dependency
 from schemas.users import UserLoginData, UserCreateData
 from services.auth_services import AuthService
@@ -25,7 +25,17 @@ def login(db: db_dependency, data: UserLoginData, res: Response):
     }
 
 @router.post("/logout")
-def logout(db: db_dependency, res: Response, token: str = Depends(security)):
+def logout(
+    db: db_dependency, 
+    req: Request, 
+    res: Response, 
+    email: str = Depends(get_current_user)
+):
+    token = req.cookies.get("access_token")
+    if token is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authorization token not found"
+        )
     data = AuthService.user_logout(db, res, token)
     return {"detail": "Logout Successful", "data": data}
-    

@@ -22,13 +22,6 @@ class ConnectionManager:
             for participant in self.active_participants 
             if participant["websocket"] != websocket
         ]
-    
-    # async def send_message(
-    #     self,
-    #     websocket: WebSocket,
-    #     message: str
-    # ): 
-    #     await websocket.send_text(message)
         
     async def broadcast_message(
         self, 

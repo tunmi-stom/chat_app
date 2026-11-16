@@ -1,6 +1,5 @@
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
-from models.room import Room
 from models.user import User
 from utils.helpers import generate_room_id, hash_password
 from schemas.rooms import RoomCreateData

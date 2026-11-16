@@ -1,5 +1,4 @@
 from pydantic import BaseModel, EmailStr, ConfigDict
-from utils.enums import Roles
 
 class UserSchema(BaseModel):
     id: int
